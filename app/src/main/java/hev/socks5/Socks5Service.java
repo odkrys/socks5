@@ -140,7 +140,7 @@ public class Socks5Service extends Service {
 
 	private void createNotification(String channelName) {
 		Intent notificationIntent = new Intent(this, MainActivity.class);
-		PendingIntent contentPendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE);
+		PendingIntent contentIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE);
 
 		Intent stopIntent = new Intent(this, Socks5Service.class);
 		stopIntent.setAction(ACTION_STOP);
@@ -151,7 +151,8 @@ public class Socks5Service extends Service {
 				.setContentTitle(getString(R.string.app_name))
 				.setContentText("Server is ON")
 				.setSmallIcon(android.R.drawable.sym_def_app_icon)
-				.setContentIntent(contentPendingIntent)
+				.setContentIntent(contentIntent)
+				.setOngoing(true)
 				.addAction(android.R.drawable.ic_menu_close_clear_cancel, "Stop", stopPendingIntent);
 
 		Notification notify = notificationBuilder.build();
