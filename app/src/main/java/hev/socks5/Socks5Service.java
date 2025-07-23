@@ -35,6 +35,7 @@ public class Socks5Service extends Service {
 
 	public static final String ACTION_START = "hev.socks5.START";
 	public static final String ACTION_STOP = "hev.socks5.STOP";
+	public static final String ACTION_SERVER_STATUS_CHANGED = "hev.socks5.SERVER_STATUS_CHANGED";
 
 	static {
 		System.loadLibrary("hev-socks5-server");
@@ -48,6 +49,13 @@ public class Socks5Service extends Service {
 
 	private final IBinder mBinder = new Socks5Binder();
 	private boolean started = false;
+	private Preferences prefs;
+
+	@Override
+	public void onCreate() {
+		super.onCreate();
+		prefs = new Preferences(this);
+	}
 
 	@Override
 	public IBinder onBind(Intent intent) {
@@ -66,14 +74,14 @@ public class Socks5Service extends Service {
 
 	@Override
 	public void onDestroy() {
+		prefs.setEnable(false);
+		sendServerStatusChangedBroadcast();
 		super.onDestroy();
 	}
 
 	public void startService() {
 		if (started)
 		  return;
-
-		Preferences prefs = new Preferences(this);
 
 		File file = new File(getCacheDir(), "socks5.conf");
 		try {
@@ -113,6 +121,8 @@ public class Socks5Service extends Service {
 		String channelName = "socks5";
 		initNotificationChannel(channelName);
 		createNotification(channelName);
+
+		sendServerStatusChangedBroadcast();
 	}
 
 	public void stopService() {
@@ -121,18 +131,31 @@ public class Socks5Service extends Service {
 
 		stopForeground(true);
 		Socks5StopService();
-		System.exit(0);
+		prefs.setEnable(false);
+		started = false;
+
+		sendServerStatusChangedBroadcast();
+		stopSelf();
 	}
 
 	private void createNotification(String channelName) {
-		Intent i = new Intent(this, Socks5Service.class);
-		PendingIntent pi = PendingIntent.getService(this, 0, i, PendingIntent.FLAG_IMMUTABLE);
-		NotificationCompat.Builder notification = new NotificationCompat.Builder(this, channelName);
-		Notification notify = notification
+		Intent notificationIntent = new Intent(this, MainActivity.class);
+		PendingIntent contentPendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE);
+
+		Intent stopIntent = new Intent(this, Socks5Service.class);
+		stopIntent.setAction(ACTION_STOP);
+		PendingIntent stopPendingIntent = PendingIntent.getService(this, 0, stopIntent, PendingIntent.FLAG_IMMUTABLE);
+
+		NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, channelName);
+		notificationBuilder
 				.setContentTitle(getString(R.string.app_name))
+				.setContentText("Server is ON")
 				.setSmallIcon(android.R.drawable.sym_def_app_icon)
-				.setContentIntent(pi)
-				.build();
+				.setContentIntent(contentPendingIntent)
+				.addAction(android.R.drawable.ic_menu_close_clear_cancel, "Stop", stopPendingIntent);
+
+		Notification notify = notificationBuilder.build();
+
 		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
 			startForeground(1, notify);
 		} else {
@@ -147,5 +170,11 @@ public class Socks5Service extends Service {
 			NotificationChannel channel = new NotificationChannel(channelName, name, NotificationManager.IMPORTANCE_DEFAULT);
 			notificationManager.createNotificationChannel(channel);
 		}
+	}
+
+	private void sendServerStatusChangedBroadcast() {
+		Intent intent = new Intent(ACTION_SERVER_STATUS_CHANGED);
+		intent.setPackage(getPackageName());
+		sendBroadcast(intent);
 	}
 }

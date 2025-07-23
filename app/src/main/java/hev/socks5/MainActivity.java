@@ -9,9 +9,13 @@
 
 package hev.socks5;
 
+import android.app.ActivityManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.Context;
 import android.view.View;
 import android.widget.Button;
@@ -34,6 +38,16 @@ public class MainActivity extends Activity implements View.OnClickListener {
 	private CheckBox checkbox_listen_ipv6_only;
 	private Button button_save;
 	private Button button_control;
+
+	private BroadcastReceiver serverStatusReceiver = new BroadcastReceiver() {
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			if (Socks5Service.ACTION_SERVER_STATUS_CHANGED.equals(intent.getAction())) {
+					checkAndSyncSocks5ServiceState();
+			}
+		}
+	};
+
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -59,7 +73,25 @@ public class MainActivity extends Activity implements View.OnClickListener {
 		checkbox_listen_ipv6_only.setOnClickListener(this);
 		button_save.setOnClickListener(this);
 		button_control.setOnClickListener(this);
-		updateUI();
+	}
+
+	@Override
+	protected void onResume() {
+		super.onResume();
+		IntentFilter filter = new IntentFilter(Socks5Service.ACTION_SERVER_STATUS_CHANGED);
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+			registerReceiver(serverStatusReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
+		} else {
+			registerReceiver(serverStatusReceiver, filter);
+		}
+		checkAndSyncSocks5ServiceState();
+	}
+
+
+	@Override
+	protected void onPause() {
+		super.onPause();
+		unregisterReceiver(serverStatusReceiver);
 	}
 
 	@Override
@@ -81,6 +113,29 @@ public class MainActivity extends Activity implements View.OnClickListener {
 		}
 	}
 
+	private void checkAndSyncSocks5ServiceState() {
+		boolean isSocks5ServiceActuallyRunning = isServiceRunning(Socks5Service.class);
+
+		if (prefs.getEnable() != isSocks5ServiceActuallyRunning) {
+			prefs.setEnable(isSocks5ServiceActuallyRunning);
+			savePrefs();
+		}
+		updateUI();
+	}
+
+	private boolean isServiceRunning(Class<?> serviceClass) {
+		ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+		if (manager != null) {
+			for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+				if (serviceClass.getName().equals(service.service.getClassName())) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+
 	private void updateUI() {
 		edittext_workers.setText(Integer.toString(prefs.getWorkers()));
 		edittext_listen_addr.setText(prefs.getListenAddress());
@@ -94,7 +149,9 @@ public class MainActivity extends Activity implements View.OnClickListener {
 		edittext_auth_pass.setText(prefs.getAuthPassword());
 		checkbox_listen_ipv6_only.setChecked(prefs.getListenIPv6Only());
 
-		boolean editable = !prefs.getEnable();
+		boolean isServerEnabled = prefs.getEnable();
+		boolean editable = !isServerEnabled;
+
 		edittext_workers.setEnabled(editable);
 		edittext_listen_addr.setEnabled(editable);
 		edittext_listen_port.setEnabled(editable);
