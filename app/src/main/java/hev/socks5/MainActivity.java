@@ -10,6 +10,7 @@
 package hev.socks5;
 
 import android.app.ActivityManager;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.app.Activity;
@@ -22,6 +23,9 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.Toast;
+
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 public class MainActivity extends Activity implements View.OnClickListener {
 	private Preferences prefs;
@@ -73,6 +77,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
 		checkbox_listen_ipv6_only.setOnClickListener(this);
 		button_save.setOnClickListener(this);
 		button_control.setOnClickListener(this);
+
+		requestNotificationPermission();
 	}
 
 	@Override
@@ -135,6 +141,16 @@ public class MainActivity extends Activity implements View.OnClickListener {
 		return false;
 	}
 
+	private void requestNotificationPermission() {
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+			if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS)
+					!= PackageManager.PERMISSION_GRANTED) {
+				ActivityCompat.requestPermissions(this,
+						new String[]{android.Manifest.permission.POST_NOTIFICATIONS},
+						1001);
+			}
+		}
+	}
 
 	private void updateUI() {
 		edittext_workers.setText(Integer.toString(prefs.getWorkers()));
