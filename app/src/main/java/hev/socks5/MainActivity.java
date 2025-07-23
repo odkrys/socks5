@@ -40,6 +40,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
 	private EditText edittext_auth_user;
 	private EditText edittext_auth_pass;
 	private CheckBox checkbox_listen_ipv6_only;
+	private CheckBox checkbox_auto_start;
 	private Button button_save;
 	private Button button_control;
 
@@ -71,6 +72,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
 		edittext_auth_user = (EditText) findViewById(R.id.auth_user);
 		edittext_auth_pass = (EditText) findViewById(R.id.auth_pass);
 		checkbox_listen_ipv6_only = (CheckBox) findViewById(R.id.listen_ipv6_only);
+		checkbox_auto_start = (CheckBox) findViewById(R.id.auto_start);
 		button_save = (Button) findViewById(R.id.save);
 		button_control = (Button) findViewById(R.id.control);
 
@@ -91,6 +93,16 @@ public class MainActivity extends Activity implements View.OnClickListener {
 			registerReceiver(serverStatusReceiver, filter);
 		}
 		checkAndSyncSocks5ServiceState();
+
+		if (prefs.getAutoStart() && !isServiceRunning(Socks5Service.class)) {
+			Intent serviceIntent = new Intent(this, Socks5Service.class);
+			serviceIntent.setAction(Socks5Service.ACTION_START);
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+				startForegroundService(serviceIntent);
+			} else {
+				startService(serviceIntent);
+			}
+		}
 	}
 
 
@@ -106,6 +118,10 @@ public class MainActivity extends Activity implements View.OnClickListener {
 			savePrefs();
 			Context context = getApplicationContext();
 			Toast.makeText(context, "Saved", Toast.LENGTH_SHORT).show();
+		} else if (view == checkbox_auto_start) {
+			prefs.setAutoStart(checkbox_auto_start.isChecked());
+			savePrefs();
+			updateUI();
 		} else if (view == button_control) {
 			boolean isEnable = prefs.getEnable();
 			prefs.setEnable(!isEnable);
@@ -164,6 +180,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
 		edittext_auth_user.setText(prefs.getAuthUsername());
 		edittext_auth_pass.setText(prefs.getAuthPassword());
 		checkbox_listen_ipv6_only.setChecked(prefs.getListenIPv6Only());
+		checkbox_auto_start.setChecked(prefs.getAutoStart());
 
 		boolean isServerEnabled = prefs.getEnable();
 		boolean editable = !isServerEnabled;
@@ -179,6 +196,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
 		edittext_auth_user.setEnabled(editable);
 		edittext_auth_pass.setEnabled(editable);
 		checkbox_listen_ipv6_only.setEnabled(editable);
+		checkbox_auto_start.setEnabled(editable);
 		button_save.setEnabled(editable);
 
 		if (editable)
@@ -199,5 +217,6 @@ public class MainActivity extends Activity implements View.OnClickListener {
 		prefs.setAuthUsername(edittext_auth_user.getText().toString());
 		prefs.setAuthPassword(edittext_auth_pass.getText().toString());
 		prefs.setListenIPv6Only(checkbox_listen_ipv6_only.isChecked());
+		prefs.setAutoStart(checkbox_auto_start.isChecked());
 	}
 }

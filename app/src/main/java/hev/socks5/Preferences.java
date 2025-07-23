@@ -28,6 +28,7 @@ public class Preferences
 	public static final String AUTH_USER = "AuthUser";
 	public static final String AUTH_PASS = "AuthPass";
 	public static final String LISTEN_IPV6_ONLY = "ListenIPv6Only";
+	public static final String AUTO_START = "auto_start";
 	public static final String ENABLE = "Enable";
 
 	private SharedPreferences prefs;
@@ -143,6 +144,16 @@ public class Preferences
 	public void setListenIPv6Only(boolean enable) {
 		SharedPreferences.Editor editor = prefs.edit();
 		editor.putBoolean(LISTEN_IPV6_ONLY, enable);
+		editor.commit();
+	}
+
+	public boolean getAutoStart() {
+		return prefs.getBoolean(AUTO_START, false);
+	}
+
+	public void setAutoStart(boolean enable) {
+		SharedPreferences.Editor editor = prefs.edit();
+		editor.putBoolean(AUTO_START, enable);
 		editor.commit();
 	}
 

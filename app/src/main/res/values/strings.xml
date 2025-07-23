@@ -12,6 +12,7 @@
 	<string name="auth_user">Auth Username: (Optional)</string>
 	<string name="auth_pass">Auth Password: (Optional)</string>
 	<string name="listen_ipv6_only">Listen IPv6 only</string>
+	<string name="auto_start">Auto Start</string>
 	<string name="save">Save</string>
 	<string name="control_start">Start</string>
 	<string name="control_stop">Stop</string>

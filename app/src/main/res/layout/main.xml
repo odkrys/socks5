@@ -122,12 +122,23 @@
 			android:layout_height="wrap_content"
 			android:singleLine="true"
 			android:inputType="textPassword"/>
-		<CheckBox
-			android:id="@+id/listen_ipv6_only"
+		<LinearLayout
+			android:orientation="horizontal"
 			android:layout_width="fill_parent"
-			android:layout_height="wrap_content"
-			android:layout_weight="1"
-			android:text="@string/listen_ipv6_only"/>
+			android:layout_height="fill_parent">
+			<CheckBox
+				android:id="@+id/listen_ipv6_only"
+				android:layout_width="fill_parent"
+				android:layout_height="wrap_content"
+				android:layout_weight="1"
+				android:text="@string/listen_ipv6_only"/>
+			<CheckBox
+				android:id="@+id/auto_start"
+				android:layout_width="fill_parent"
+				android:layout_height="wrap_content"
+				android:layout_weight="1"
+				android:text="@string/auto_start"/>
+		</LinearLayout>
 		<LinearLayout
 			android:orientation="horizontal"
 			android:layout_width="fill_parent"
