@@ -4,7 +4,7 @@
 
 # Socks5
 
-[![status](https://github.com/heiher/socks5/actions/workflows/build.yaml/badge.svg?branch=master&event=push)](https://github.com/heiher/socks5)
+[![status](https://github.com/heiher/socks5/actions/workflows/build.yaml/badge.svg?branch=main&event=push)](https://github.com/heiher/socks5)
 
 A simple and lightweight socks5 server for Android.
 
